@@ -16,6 +16,18 @@ DEFAULT_DEFAULTS = {
     "window_end": "22:00",
 }
 
+DAY_ABBR = ["mon", "tue", "wed", "thu", "fri", "sat", "sun"]
+DAY_ALIASES = {
+    "weekdays": [0, 1, 2, 3, 4],
+    "weekday": [0, 1, 2, 3, 4],
+    "weekends": [5, 6],
+    "weekend": [5, 6],
+    "all": list(range(7)),
+    "daily": list(range(7)),
+    "everyday": list(range(7)),
+}
+ALL_DAYS = tuple(range(7))
+
 
 class ConfigError(ValueError):
     pass
@@ -27,6 +39,7 @@ class Item:
     interval_minutes: int
     window_start: time
     window_end: time
+    days: tuple[int, ...] = ALL_DAYS
 
 
 def _parse_time(value: str, field: str) -> time:
@@ -34,6 +47,32 @@ def _parse_time(value: str, field: str) -> time:
         raise ConfigError(f"{field} must be HH:MM (24h), got {value!r}")
     h, m = value.split(":")
     return time(int(h), int(m))
+
+
+def _parse_days(value, field: str = "days") -> tuple[int, ...]:
+    if isinstance(value, str):
+        tokens = [t.strip().lower() for t in value.split(",") if t.strip()]
+    else:
+        tokens = [str(t).strip().lower() for t in value]
+
+    days: set[int] = set()
+    for tok in tokens:
+        if tok in DAY_ALIASES:
+            days.update(DAY_ALIASES[tok])
+            continue
+        abbr = tok[:3]
+        if abbr in DAY_ABBR:
+            days.add(DAY_ABBR.index(abbr))
+            continue
+        raise ConfigError(f"{field}: unrecognized day {tok!r}")
+
+    if not days:
+        raise ConfigError(f"{field} must not be empty")
+    return tuple(sorted(days))
+
+
+def _format_days(days: tuple[int, ...]) -> list[str]:
+    return [DAY_ABBR[d] for d in days]
 
 
 def load_raw() -> dict:
@@ -59,6 +98,7 @@ def _build_items(raw: dict) -> dict[str, Item]:
     default_interval = int(defaults.get("interval_minutes", DEFAULT_DEFAULTS["interval_minutes"]))
     default_start = defaults.get("window_start", DEFAULT_DEFAULTS["window_start"])
     default_end = defaults.get("window_end", DEFAULT_DEFAULTS["window_end"])
+    default_days = defaults.get("days")
 
     items: dict[str, Item] = {}
     for entry in raw.get("items") or []:
@@ -77,7 +117,12 @@ def _build_items(raw: dict) -> dict[str, Item]:
         if not start < end:
             raise ConfigError(f"{name}: window_start must be before window_end (same-day windows only)")
 
-        items[name] = Item(name=name, interval_minutes=interval, window_start=start, window_end=end)
+        days_raw = entry.get("days", default_days)
+        days = _parse_days(days_raw, f"{name}.days") if days_raw else ALL_DAYS
+
+        items[name] = Item(
+            name=name, interval_minutes=interval, window_start=start, window_end=end, days=days
+        )
 
     return items
 
@@ -91,6 +136,7 @@ def add_item(
     interval_minutes: int | None = None,
     window_start: str | None = None,
     window_end: str | None = None,
+    days: str | None = None,
 ) -> None:
     raw = load_raw()
     items = raw.setdefault("items", [])
@@ -104,7 +150,35 @@ def add_item(
         entry["window_start"] = window_start
     if window_end is not None:
         entry["window_end"] = window_end
+    if days is not None:
+        entry["days"] = _format_days(_parse_days(days, f"{name}.days"))
     items.append(entry)
+
+    _build_items(raw)  # validate before persisting
+    save_raw(raw)
+
+
+def update_item(
+    name: str,
+    interval_minutes: int | None = None,
+    window_start: str | None = None,
+    window_end: str | None = None,
+    days: str | None = None,
+) -> None:
+    raw = load_raw()
+    items = raw.get("items") or []
+    entry = next((i for i in items if i.get("name") == name), None)
+    if entry is None:
+        raise ConfigError(f"no such item: {name!r}")
+
+    if interval_minutes is not None:
+        entry["interval_minutes"] = interval_minutes
+    if window_start is not None:
+        entry["window_start"] = window_start
+    if window_end is not None:
+        entry["window_end"] = window_end
+    if days is not None:
+        entry["days"] = _format_days(_parse_days(days, f"{name}.days"))
 
     _build_items(raw)  # validate before persisting
     save_raw(raw)

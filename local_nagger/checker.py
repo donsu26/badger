@@ -32,7 +32,8 @@ def run_tick() -> None:
 def _tick() -> None:
     now = state_mod.now()
     today = now.date()
-    items = config.load_items()
+    all_items = config.load_items()
+    items = {name: item for name, item in all_items.items() if today.weekday() in item.days}
     st = state_mod.load()
 
     # 1. daily reset (date-comparison based, self-heals across sleep/crash gaps)
