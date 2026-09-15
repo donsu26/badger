@@ -1,0 +1,16 @@
+# Copy this file to config.yaml and edit it to add your own reminders.
+# config.yaml is gitignored so your personal items never get pushed.
+
+defaults:
+  interval_minutes: 15
+  window_start: "08:00"
+  window_end: "22:00"
+
+items:
+  - name: "Drink water"
+    # uses the defaults above
+
+  - name: "Stretch"
+    interval_minutes: 60
+    window_start: "09:00"
+    window_end: "18:00"
