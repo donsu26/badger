@@ -100,13 +100,13 @@ final class OverlayController: NSObject {
 
         NSLayoutConstraint.activate([
             label.centerXAnchor.constraint(equalTo: effect.centerXAnchor),
-            label.centerYAnchor.constraint(equalTo: effect.centerYAnchor, constant: 55),
+            label.centerYAnchor.constraint(equalTo: effect.centerYAnchor, constant: -80),
 
-            done.centerYAnchor.constraint(equalTo: effect.centerYAnchor, constant: -35),
+            done.centerYAnchor.constraint(equalTo: effect.centerYAnchor, constant: 20),
             done.trailingAnchor.constraint(equalTo: effect.centerXAnchor, constant: -10),
             done.widthAnchor.constraint(equalToConstant: 180),
 
-            skip.centerYAnchor.constraint(equalTo: effect.centerYAnchor, constant: -35),
+            skip.centerYAnchor.constraint(equalTo: effect.centerYAnchor, constant: 20),
             skip.leadingAnchor.constraint(equalTo: effect.centerXAnchor, constant: 10),
             skip.widthAnchor.constraint(equalToConstant: 180),
         ])
