@@ -32,14 +32,69 @@ export PATH="$HOME/local-nagger/bin:$PATH"
 
 ## Usage
 
+### `nagger add <name> [options]`
+
+Add a new checklist item.
+
 ```
 nagger add "Take medicine" --interval 15 --start 08:00 --end 22:00
-nagger add "Drink water"                     # uses the defaults
-nagger list
-nagger status
-nagger history --item "Take medicine" --days 7
+nagger add "Drink water"                        # uses the defaults (every 15m, 08:00-22:00, every day)
+nagger add "Take out trash" --days sun          # only nags on Sundays
+nagger add "Gym" --days weekdays --start 06:00 --end 09:00
+```
+
+- `--interval <minutes>` — how often to re-nag while the item is due (default: `15`)
+- `--start <HH:MM>` / `--end <HH:MM>` — active time window, 24h format (default: `08:00`-`22:00`)
+- `--days <spec>` — which days it's active. Comma-separated day abbreviations
+  (`mon,tue,wed,thu,fri,sat,sun`), or one of `weekdays`, `weekends`, `all`/`daily`/`everyday`
+  (default: `all`)
+
+### `nagger update <name> [options]`
+
+Change an existing item's interval, window, or days. Same flags as `add`; only
+the flags you pass are changed, the rest are left as-is.
+
+```
+nagger update "Take medicine" --interval 30
+nagger update "Gym" --days weekends --start 08:00 --end 10:00
+```
+
+### `nagger remove <name>`
+
+Delete an item from the checklist.
+
+```
 nagger remove "Drink water"
 ```
+
+### `nagger list`
+
+Print every configured item with its interval, window, and active days.
+
+```
+nagger list
+```
+
+### `nagger status`
+
+Show each item's status for today (`pending` / `done` / `skipped`), when that
+status was set, and whether it's currently in its active window.
+
+```
+nagger status
+```
+
+### `nagger history [options]`
+
+Show the done/skipped/missed event log.
+
+```
+nagger history                                  # last 7 days, all items
+nagger history --item "Take medicine" --days 30
+```
+
+- `--item <name>` — filter to one item (default: all items)
+- `--days <n>` — how many days back to show (default: `7`)
 
 `config.yaml` is your personal, hand-editable checklist — it's gitignored
 because it may name real medications. Only `config.example.yaml` is committed.
@@ -52,6 +107,10 @@ every hour" or "is my reminder service running?". The skill source lives in
 `claude-skill/SKILL.md` and is installed by `setup.sh`.
 
 ## How the overlay works
+
+When an item is due, this is what greets you on every display:
+
+![Overlay example](assets/overlay-screenshot.png)
 
 The reminder popup (`overlay-src/overlay.swift`) is a small compiled Swift
 binary (built by `setup.sh` into `bin/overlay`) that shows a borderless,
