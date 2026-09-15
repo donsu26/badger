@@ -16,6 +16,11 @@ echo "Installing dependencies..."
 "$DIR/.venv/bin/pip" install --quiet --upgrade pip
 "$DIR/.venv/bin/pip" install --quiet -r requirements.txt
 
+if [ ! -f bin/overlay ] || [ overlay-src/overlay.swift -nt bin/overlay ]; then
+    echo "Compiling overlay binary..."
+    swiftc -O overlay-src/overlay.swift -o bin/overlay
+fi
+
 if [ ! -f config.yaml ]; then
     echo "Creating config.yaml from config.example.yaml..."
     cp config.example.yaml config.yaml

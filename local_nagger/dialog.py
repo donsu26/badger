@@ -7,22 +7,24 @@ DONE = "done"
 SKIP = "skip"
 TIMEOUT = "timeout"
 
-_OVERLAY_SCRIPT = Path(__file__).resolve().parent / "overlay.js"
+_OVERLAY_BIN = Path(__file__).resolve().parent.parent / "bin" / "overlay"
 
 
 def show_dialog(name: str, giving_up_after: int = 50) -> str:
     """Show a full-screen, blurred, blocking overlay reminding the user of `name`.
 
-    Implemented as a JXA (JavaScript for Automation) script run via osascript,
-    which reliably owns a WindowServer connection in this environment; a bare
-    PyObjC NSApplication run from a plain background Python process was
-    observed to hang with no window ever appearing.
+    Implemented as a compiled Swift binary (built by setup.sh from
+    overlay-src/overlay.swift), not a script run via osascript/JXA — a
+    manually-driven NSApplication invoked through osascript could display
+    windows but never actually became the key/active app, so real mouse
+    clicks on the buttons were silently swallowed. A compiled process running
+    a real NSApp.run() event loop becomes key/main/active correctly.
 
     Returns "done", "skip", or "timeout" (also used for any error / crash,
     since a failed overlay must never crash the checker tick).
     """
     result = subprocess.run(
-        ["osascript", "-l", "JavaScript", str(_OVERLAY_SCRIPT), name, str(giving_up_after)],
+        [str(_OVERLAY_BIN), name, str(giving_up_after)],
         capture_output=True,
         text=True,
         check=False,

@@ -53,13 +53,17 @@ every hour" or "is my reminder service running?". The skill source lives in
 
 ## How the overlay works
 
-The reminder popup (`local_nagger/overlay.js`) is a JXA (JavaScript for
-Automation) script run via `osascript -l JavaScript`, using the ObjC bridge to
-build a borderless, screen-saver-level `NSWindow` per display with an
-`NSVisualEffectView` for the blur. It's JXA rather than a plain Python/PyObjC
-`NSApplication` because a bare PyObjC app run from a background Python
-process didn't reliably get a working WindowServer connection, whereas
-`osascript` (and therefore JXA, which runs inside the same host process) does.
+The reminder popup (`overlay-src/overlay.swift`) is a small compiled Swift
+binary (built by `setup.sh` into `bin/overlay`) that shows a borderless,
+screen-saver-level `NSWindow` per display with an `NSVisualEffectView` for the
+blur, and real "Done for today"/"Skip today" buttons on the screen under your
+cursor. It's a compiled binary rather than a script, because a manually
+driven `NSApplication` run from an interpreted process (both plain
+Python/PyObjC and JXA via `osascript`) could display the windows fine but
+never actually became the key/active app, so real mouse clicks on the
+buttons were silently swallowed as mere focus-steal attempts. A compiled
+process running a real `NSApp.run()` event loop becomes key/main/active
+correctly.
 
 ## Managing the background service
 
