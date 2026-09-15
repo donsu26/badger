@@ -4,12 +4,59 @@ import fcntl
 import sys
 from datetime import datetime, timedelta
 
-from . import config, dialog, history, paths
+from . import calendar_events, calendar_state, config, dialog, history, paths
 from . import state as state_mod
 
 
 def _combine(d, t):
     return datetime.combine(d, t, tzinfo=state_mod.now().tzinfo)
+
+
+def _check_calendar(now: datetime) -> None:
+    cal_cfg = config.load_calendar_config()
+    if not cal_cfg.enabled:
+        return
+
+    cal_st = calendar_state.load()
+    calendar_state.prune(cal_st, now)
+
+    authorized, events = calendar_events.query_upcoming(cal_cfg.poll_window_minutes)
+    if not authorized:
+        status = calendar_events.check_auth().get("status", "unknown")
+        calendar_state.maybe_warn_unauthorized(cal_st, now, status)
+        calendar_state.save(cal_st)
+        return
+
+    due = []
+    for ev in events:
+        if cal_cfg.ignore_all_day and ev.is_all_day:
+            continue
+        if cal_cfg.ignore_declined and ev.declined:
+            continue
+        key = f"{ev.id}|{ev.start_epoch}"
+        if key in cal_st:
+            continue
+        seconds_until_start = ev.start_epoch - now.timestamp()
+        if 0 < seconds_until_start <= cal_cfg.lookahead_minutes * 60:
+            due.append((key, ev))
+
+    due.sort(key=lambda pair: pair[1].start_epoch)
+
+    for key, ev in due:
+        cal_st[key] = {
+            "notified_at": now.isoformat(),
+            "title": ev.title,
+            "start_epoch": ev.start_epoch,
+        }
+        calendar_state.save(cal_st)  # persist before the blocking dialog (crash-safe)
+
+        result = dialog.show_meeting_dialog(ev.title, ev.join_url or "", cal_cfg.prompt_timeout_seconds)
+        resolved = state_mod.now()
+        event_name = {"join": "meeting_join", "dismiss": "meeting_dismiss"}.get(result, "meeting_timeout")
+        history.append(ev.title, event_name, resolved)
+
+        cal_st[key]["result"] = result
+        calendar_state.save(cal_st)
 
 
 def run_tick() -> None:
@@ -31,6 +78,8 @@ def run_tick() -> None:
 
 def _tick() -> None:
     now = state_mod.now()
+    _check_calendar(now)  # before checklist items - meeting timing is more time-sensitive
+
     today = now.date()
     all_items = config.load_items()
     items = {name: item for name, item in all_items.items() if today.weekday() in item.days}

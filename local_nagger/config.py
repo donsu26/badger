@@ -16,6 +16,15 @@ DEFAULT_DEFAULTS = {
     "window_end": "22:00",
 }
 
+DEFAULT_CALENDAR = {
+    "enabled": False,
+    "lookahead_minutes": 2,
+    "poll_window_minutes": 15,
+    "prompt_timeout_seconds": 90,
+    "ignore_declined": True,
+    "ignore_all_day": True,
+}
+
 DAY_ABBR = ["mon", "tue", "wed", "thu", "fri", "sat", "sun"]
 DAY_ALIASES = {
     "weekdays": [0, 1, 2, 3, 4],
@@ -40,6 +49,16 @@ class Item:
     window_start: time
     window_end: time
     days: tuple[int, ...] = ALL_DAYS
+
+
+@dataclass(frozen=True)
+class CalendarConfig:
+    enabled: bool
+    lookahead_minutes: int
+    poll_window_minutes: int
+    prompt_timeout_seconds: int
+    ignore_declined: bool
+    ignore_all_day: bool
 
 
 def _parse_time(value: str, field: str) -> time:
@@ -129,6 +148,35 @@ def _build_items(raw: dict) -> dict[str, Item]:
 
 def load_items() -> dict[str, Item]:
     return _build_items(load_raw())
+
+
+def _build_calendar_config(raw: dict) -> CalendarConfig:
+    merged = {**DEFAULT_CALENDAR, **(raw.get("calendar") or {})}
+
+    lookahead = int(merged["lookahead_minutes"])
+    if lookahead <= 0:
+        raise ConfigError("calendar.lookahead_minutes must be > 0")
+
+    poll_window = int(merged["poll_window_minutes"])
+    if poll_window < lookahead:
+        raise ConfigError("calendar.poll_window_minutes must be >= lookahead_minutes")
+
+    prompt_timeout = int(merged["prompt_timeout_seconds"])
+    if prompt_timeout <= 0:
+        raise ConfigError("calendar.prompt_timeout_seconds must be > 0")
+
+    return CalendarConfig(
+        enabled=bool(merged["enabled"]),
+        lookahead_minutes=lookahead,
+        poll_window_minutes=poll_window,
+        prompt_timeout_seconds=prompt_timeout,
+        ignore_declined=bool(merged["ignore_declined"]),
+        ignore_all_day=bool(merged["ignore_all_day"]),
+    )
+
+
+def load_calendar_config() -> CalendarConfig:
+    return _build_calendar_config(load_raw())
 
 
 def add_item(

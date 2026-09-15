@@ -1,7 +1,10 @@
 // Full-screen blurred reminder overlay for Local Nagger.
 //
-// Usage: overlay "<item name>" <giving_up_after_seconds>
-// Prints exactly one of: done | skip | timeout, then exits.
+// Usage:
+//   overlay "<item name>" <giving_up_after_seconds>
+//   overlay --meeting "<title>" "<joinUrl-or-empty>" <giving_up_after_seconds>
+// Checklist mode prints exactly one of: done | skip | timeout, then exits.
+// Meeting mode prints exactly one of: join | dismiss | timeout, then exits.
 //
 // This is a compiled Swift binary (not a script run via osascript) because a
 // manually-driven NSApplication invoked through `osascript -l JavaScript`
@@ -12,8 +15,22 @@
 import Cocoa
 
 let args = CommandLine.arguments
-let itemName = args.count > 1 ? args[1] : "Reminder"
-let givingUpAfter = args.count > 2 ? (Double(args[2]) ?? 50) : 50
+let isMeeting = args.count > 1 && args[1] == "--meeting"
+
+let itemName: String
+let givingUpAfter: Double
+let meetingJoinURL: String?
+
+if isMeeting {
+    itemName = args.count > 2 ? args[2] : "Meeting"
+    let rawJoinURL = args.count > 3 ? args[3] : ""
+    meetingJoinURL = rawJoinURL.isEmpty ? nil : rawJoinURL
+    givingUpAfter = args.count > 4 ? (Double(args[4]) ?? 90) : 90
+} else {
+    itemName = args.count > 1 ? args[1] : "Reminder"
+    meetingJoinURL = nil
+    givingUpAfter = args.count > 2 ? (Double(args[2]) ?? 50) : 50
+}
 
 final class KeyableWindow: NSWindow {
     override var canBecomeKey: Bool { true }
@@ -74,8 +91,18 @@ final class OverlayController: NSObject {
 
     var doneButton: NSButton?
     var skipButton: NSButton?
+    var joinButton: NSButton?
+    var dismissButton: NSButton?
 
     func addControls(to effect: NSVisualEffectView) {
+        if isMeeting {
+            addMeetingControls(to: effect)
+        } else {
+            addChecklistControls(to: effect)
+        }
+    }
+
+    func addChecklistControls(to effect: NSVisualEffectView) {
         let label = NSTextField(labelWithString: "Reminder: \(itemName)")
         label.font = NSFont.systemFont(ofSize: 40, weight: .semibold)
         label.textColor = .white
@@ -112,19 +139,78 @@ final class OverlayController: NSObject {
         ])
     }
 
+    func addMeetingControls(to effect: NSVisualEffectView) {
+        let label = NSTextField(labelWithString: "Starting soon: \(itemName)")
+        label.font = NSFont.systemFont(ofSize: 40, weight: .semibold)
+        label.textColor = .white
+        label.alignment = .center
+        label.translatesAutoresizingMaskIntoConstraints = false
+        effect.addSubview(label)
+
+        let dismiss = NSButton(title: "Dismiss", target: self, action: #selector(onDismiss))
+        dismiss.bezelStyle = .rounded
+        dismiss.controlSize = .large
+        dismiss.translatesAutoresizingMaskIntoConstraints = false
+        effect.addSubview(dismiss)
+        dismissButton = dismiss
+
+        if meetingJoinURL != nil {
+            let join = NSButton(title: "Join Meeting", target: self, action: #selector(onJoin))
+            join.bezelStyle = .rounded
+            join.controlSize = .large
+            join.keyEquivalent = "\r"
+            join.translatesAutoresizingMaskIntoConstraints = false
+            effect.addSubview(join)
+            joinButton = join
+
+            NSLayoutConstraint.activate([
+                label.centerXAnchor.constraint(equalTo: effect.centerXAnchor),
+                label.centerYAnchor.constraint(equalTo: effect.centerYAnchor, constant: -80),
+
+                join.centerYAnchor.constraint(equalTo: effect.centerYAnchor, constant: 20),
+                join.trailingAnchor.constraint(equalTo: effect.centerXAnchor, constant: -10),
+                join.widthAnchor.constraint(equalToConstant: 180),
+
+                dismiss.centerYAnchor.constraint(equalTo: effect.centerYAnchor, constant: 20),
+                dismiss.leadingAnchor.constraint(equalTo: effect.centerXAnchor, constant: 10),
+                dismiss.widthAnchor.constraint(equalToConstant: 180),
+            ])
+        } else {
+            NSLayoutConstraint.activate([
+                label.centerXAnchor.constraint(equalTo: effect.centerXAnchor),
+                label.centerYAnchor.constraint(equalTo: effect.centerYAnchor, constant: -80),
+
+                dismiss.centerXAnchor.constraint(equalTo: effect.centerXAnchor),
+                dismiss.centerYAnchor.constraint(equalTo: effect.centerYAnchor, constant: 20),
+                dismiss.widthAnchor.constraint(equalToConstant: 180),
+            ])
+        }
+    }
+
     func scheduleSelfTest(_ mode: String) {
         Timer.scheduledTimer(withTimeInterval: 1.0, repeats: false) { [weak self] _ in
             guard let self else { return }
-            if mode == "done" {
-                self.doneButton?.performClick(nil)
-            } else if mode == "skip" {
-                self.skipButton?.performClick(nil)
+            switch mode {
+            case "done": self.doneButton?.performClick(nil)
+            case "skip": self.skipButton?.performClick(nil)
+            case "join": self.joinButton?.performClick(nil)
+            case "dismiss": self.dismissButton?.performClick(nil)
+            default: break
             }
         }
     }
 
     @objc func onDone() { finish(with: "done") }
     @objc func onSkip() { finish(with: "skip") }
+
+    @objc func onJoin() {
+        if let urlString = meetingJoinURL, let url = URL(string: urlString) {
+            NSWorkspace.shared.open(url)
+        }
+        finish(with: "join")
+    }
+
+    @objc func onDismiss() { finish(with: "dismiss") }
 
     func finish(with value: String) {
         timeoutTimer?.invalidate()

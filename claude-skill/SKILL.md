@@ -19,6 +19,14 @@ shell: `~/local-nagger/bin/nagger`.
 
 Item names must match exactly (case-sensitive) what's shown by `list`/`status` — look it up first if unsure rather than guessing.
 
+## Meeting reminders
+
+If the user asks about Google Calendar / meeting join reminders:
+
+- Preview upcoming events + detected join links: `~/local-nagger/bin/nagger calendar list [--hours N]`
+- Force-test the overlay on the soonest event with a join link: `~/local-nagger/bin/nagger calendar test`
+- This feature is off by default (`calendar.enabled: false`) and hand-edited in `config.yaml`, not via a CLI verb - point the user at the "Meeting reminders" section of README.md to enable it.
+
 ## Background service management
 
 The reminder checker runs as a launchd agent labeled `com.local-nagger.checker`, ticking every 60s.

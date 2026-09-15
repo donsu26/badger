@@ -26,3 +26,7 @@ def history_path() -> Path:
 
 def lock_path() -> Path:
     return data_dir() / "checker.lock"
+
+
+def calendar_state_path() -> Path:
+    return data_dir() / "calendar_state.json"

@@ -14,3 +14,13 @@ items:
     interval_minutes: 60
     window_start: "09:00"
     window_end: "18:00"
+
+# Meeting reminders (Google Calendar via EventKit). Off by default - see the
+# "Meeting reminders" section in README.md before enabling.
+# calendar:
+#   enabled: true
+#   lookahead_minutes: 2        # show the overlay this many minutes before start
+#   poll_window_minutes: 15     # how far ahead to query Calendar.app each tick
+#   prompt_timeout_seconds: 90  # how long the meeting overlay waits before giving up
+#   ignore_declined: true       # skip events you've declined
+#   ignore_all_day: true        # skip all-day events

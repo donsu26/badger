@@ -99,6 +99,67 @@ nagger history --item "Take medicine" --days 30
 `config.yaml` is your personal, hand-editable checklist — it's gitignored
 because it may name real medications. Only `config.example.yaml` is committed.
 
+## Meeting reminders (Google Calendar via EventKit)
+
+Local Nagger can also show the same kind of full-screen overlay 2 minutes
+before a Google Calendar meeting starts, with a **Join Meeting** button that
+opens the video-call link directly. It's off by default.
+
+This reads events from macOS Calendar.app via **EventKit**, not the Google
+Calendar API — so it relies on your Google account already being synced into
+Calendar.app (System Settings > Internet Accounts, or added directly in
+Calendar.app), and needs no OAuth setup. The join link is taken from the
+event's URL field, falling back to searching its location/notes for a
+Meet/Zoom/Teams/etc. link.
+
+### One-time Calendar permission
+
+The first time `setup.sh` runs (or is re-run after `bin/calendar-events` is
+rebuilt), it triggers a standard macOS permission prompt — approve it in
+System Settings > Privacy & Security > Calendars. Because the binary is
+ad-hoc code-signed, **rebuilding it changes its signature**, and macOS will
+ask you to re-approve access after any future rebuild. You can also trigger
+this manually:
+
+```
+bin/calendar-events check-auth            # see current status, never prompts
+bin/calendar-events request-access        # trigger the permission prompt
+```
+
+### Enabling it
+
+Add a `calendar:` block to `config.yaml` (see the commented-out example in
+`config.example.yaml`):
+
+```yaml
+calendar:
+  enabled: true
+  lookahead_minutes: 2        # show the overlay this many minutes before start
+  poll_window_minutes: 15     # how far ahead to query Calendar.app each tick
+  prompt_timeout_seconds: 90  # how long the meeting overlay waits before giving up
+  ignore_declined: true       # skip events you've declined
+  ignore_all_day: true        # skip all-day events
+```
+
+Each meeting is only notified once, regardless of whether you click Join,
+Dismiss, or let it time out — unlike checklist items, meetings aren't
+recurring nags.
+
+### `nagger calendar list [--hours N]`
+
+Debug/inspection command: prints upcoming events (default: next 2 hours) and
+whatever join link was detected for each, without the 2-minute gating.
+
+### `nagger calendar test`
+
+Force-shows the meeting overlay for the soonest upcoming event that has a
+detected join link, bypassing the 2-minute gate — useful for testing the
+overlay UI without waiting for a real meeting. It never writes to the
+dedupe state, so it won't suppress the real reminder later.
+
+Results show up via the normal `nagger history` command as `meeting_join`,
+`meeting_dismiss`, or `meeting_timeout` events.
+
 ## Claude Code integration
 
 A global Claude Code skill (`~/.claude/skills/local-nagger/`) lets you manage
