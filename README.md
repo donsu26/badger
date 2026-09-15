@@ -68,8 +68,8 @@ correctly.
 ## Managing the background service
 
 ```
-launchctl list | grep com.donsu.local-nagger        # check it's running
-launchctl kickstart -k gui/$(id -u)/com.donsu.local-nagger   # force an immediate tick
-launchctl bootout gui/$(id -u)/com.donsu.local-nagger        # stop it
+launchctl list | grep com.local-nagger.checker        # check it's running
+launchctl kickstart -k gui/$(id -u)/com.local-nagger.checker   # force an immediate tick
+launchctl bootout gui/$(id -u)/com.local-nagger.checker        # stop it
 tail -f data/checker.log data/checker.err.log                # watch activity/errors
 ```

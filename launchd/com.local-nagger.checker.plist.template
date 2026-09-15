@@ -3,11 +3,11 @@
 <plist version="1.0">
 <dict>
     <key>Label</key>
-    <string>com.donsu.local-nagger</string>
+    <string>com.local-nagger.checker</string>
 
     <key>ProgramArguments</key>
     <array>
-        <string>/Users/donsu/local-nagger/.venv/bin/python3</string>
+        <string>__NAGGER_DIR__/.venv/bin/python3</string>
         <string>-m</string>
         <string>local_nagger.checker</string>
     </array>
@@ -15,11 +15,11 @@
     <key>EnvironmentVariables</key>
     <dict>
         <key>PYTHONPATH</key>
-        <string>/Users/donsu/local-nagger</string>
+        <string>__NAGGER_DIR__</string>
     </dict>
 
     <key>WorkingDirectory</key>
-    <string>/Users/donsu/local-nagger</string>
+    <string>__NAGGER_DIR__</string>
 
     <key>RunAtLoad</key>
     <true/>
@@ -31,9 +31,9 @@
     <string>Aqua</string>
 
     <key>StandardOutPath</key>
-    <string>/Users/donsu/local-nagger/data/checker.log</string>
+    <string>__NAGGER_DIR__/data/checker.log</string>
 
     <key>StandardErrorPath</key>
-    <string>/Users/donsu/local-nagger/data/checker.err.log</string>
+    <string>__NAGGER_DIR__/data/checker.err.log</string>
 </dict>
 </plist>

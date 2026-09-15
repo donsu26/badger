@@ -17,6 +17,10 @@ echo "Installing dependencies..."
 "$DIR/.venv/bin/pip" install --quiet -r requirements.txt
 
 if [ ! -f bin/overlay ] || [ overlay-src/overlay.swift -nt bin/overlay ]; then
+    if ! command -v swiftc >/dev/null 2>&1; then
+        echo "error: swiftc not found. Install Xcode Command Line Tools with: xcode-select --install" >&2
+        exit 1
+    fi
     echo "Compiling overlay binary..."
     swiftc -O overlay-src/overlay.swift -o bin/overlay
 fi
@@ -33,16 +37,25 @@ touch data/history.jsonl
 
 chmod +x bin/nagger
 
-PLIST_SRC="$DIR/launchd/com.donsu.local-nagger.plist"
-PLIST_DST="$HOME/Library/LaunchAgents/com.donsu.local-nagger.plist"
+PLIST_SRC="$DIR/launchd/com.local-nagger.checker.plist.template"
+PLIST_DST="$HOME/Library/LaunchAgents/com.local-nagger.checker.plist"
 mkdir -p "$HOME/Library/LaunchAgents"
+
+# Clean up the pre-rename agent/plist if present (label changed from
+# com.donsu.local-nagger to com.local-nagger.checker).
+OLD_PLIST_DST="$HOME/Library/LaunchAgents/com.donsu.local-nagger.plist"
+if [ -L "$OLD_PLIST_DST" ] || [ -f "$OLD_PLIST_DST" ]; then
+    echo "Removing legacy launchd agent (com.donsu.local-nagger)..."
+    launchctl bootout "gui/$(id -u)/com.donsu.local-nagger" 2>/dev/null || true
+    rm -f "$OLD_PLIST_DST"
+fi
 
 if [ -L "$PLIST_DST" ] || [ -f "$PLIST_DST" ]; then
     echo "Unloading existing launchd agent (if loaded)..."
-    launchctl bootout "gui/$(id -u)/com.donsu.local-nagger" 2>/dev/null || true
+    launchctl bootout "gui/$(id -u)/com.local-nagger.checker" 2>/dev/null || true
     rm -f "$PLIST_DST"
 fi
-ln -s "$PLIST_SRC" "$PLIST_DST"
+sed "s|__NAGGER_DIR__|$DIR|g" "$PLIST_SRC" > "$PLIST_DST"
 
 echo "Loading launchd agent..."
 launchctl bootstrap "gui/$(id -u)" "$PLIST_DST"
@@ -63,5 +76,5 @@ fi
 
 echo ""
 echo "Setup complete. Verifying..."
-launchctl list | grep com.donsu.local-nagger || echo "warning: agent not showing in launchctl list yet"
+launchctl list | grep com.local-nagger.checker || echo "warning: agent not showing in launchctl list yet"
 "$DIR/bin/nagger" list

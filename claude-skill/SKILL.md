@@ -21,13 +21,13 @@ Item names must match exactly (case-sensitive) what's shown by `list`/`status` �
 
 ## Background service management
 
-The reminder checker runs as a launchd agent labeled `com.donsu.local-nagger`, ticking every 60s.
+The reminder checker runs as a launchd agent labeled `com.local-nagger.checker`, ticking every 60s.
 
-- Check if running / last exit status: `launchctl list | grep com.donsu.local-nagger`
+- Check if running / last exit status: `launchctl list | grep com.local-nagger.checker`
   (a PID column with a number means it's currently mid-tick; "-" is normal between ticks — a nonzero "last exit code" column indicates the last tick errored)
-- Force an immediate tick (e.g. to test a change right away): `launchctl kickstart -k gui/$(id -u)/com.donsu.local-nagger`
-- Stop it: `launchctl bootout gui/$(id -u)/com.donsu.local-nagger`
-- Start it again: `launchctl bootstrap gui/$(id -u) ~/Library/LaunchAgents/com.donsu.local-nagger.plist`
+- Force an immediate tick (e.g. to test a change right away): `launchctl kickstart -k gui/$(id -u)/com.local-nagger.checker`
+- Stop it: `launchctl bootout gui/$(id -u)/com.local-nagger.checker`
+- Start it again: `launchctl bootstrap gui/$(id -u) ~/Library/LaunchAgents/com.local-nagger.checker.plist`
 - Recent activity / errors: `tail -n 50 ~/local-nagger/data/checker.log` and `~/local-nagger/data/checker.err.log`
 
 Never edit `~/local-nagger/config.yaml` or `data/state.json`/`data/history.jsonl` directly — always go through the CLI so validation and locking are respected.
