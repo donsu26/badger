@@ -1,9 +1,14 @@
 # Badger
 
-A local macOS app that nags you with a full-screen, blurred overlay until you
-mark a recurring daily task done, and can also warn you 2 minutes before a
-Google Calendar meeting starts with a one-click join button — built because
-notification banners are too easy to ignore.
+A free, open-source alternative to [InYourFace](https://inyourface.app) built
+for developers. It's a local macOS app that nags you with a full-screen,
+blurred overlay until you mark a recurring daily task done, and can also warn
+you 2 minutes before a Google Calendar meeting starts with a one-click join
+button — built because notification banners are too easy to ignore.
+
+Unlike InYourFace, Badger is entirely local, config-file-driven, and ships
+with a Claude Code skill so you can manage reminders conversationally — no
+account, no paid tiers, no GUI required to set things up.
 
 ![Overlay example](assets/overlay-screenshot.png)
 
