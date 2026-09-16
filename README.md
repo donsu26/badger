@@ -110,6 +110,13 @@ Badger can also show the same kind of full-screen overlay 2 minutes
 before a Google Calendar meeting starts, with a **Join Meeting** button that
 opens the video-call link directly. It's off by default.
 
+![Meeting reminder example](assets/meeting-overlay-screenshot.png)
+
+If no join link could be detected for the event, only a **Dismiss** button
+is shown instead:
+
+![Meeting reminder with no detected join link](assets/meeting-overlay-no-link-screenshot.png)
+
 This reads events from macOS Calendar.app via **EventKit**, not the Google
 Calendar API — so it relies on your Google account already being synced into
 Calendar.app (System Settings > Internet Accounts, or added directly in
