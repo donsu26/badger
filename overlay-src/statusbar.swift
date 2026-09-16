@@ -206,7 +206,18 @@ final class StatusBarController: NSObject, NSMenuDelegate {
     }
 
     @objc func quit() {
+        stopChecker()
         NSApplication.shared.terminate(nil)
+    }
+
+    func stopChecker() {
+        let task = Process()
+        task.executableURL = URL(fileURLWithPath: "/bin/launchctl")
+        task.arguments = ["bootout", "gui/\(getuid())/com.badger.checker"]
+        task.standardOutput = FileHandle.nullDevice
+        task.standardError = FileHandle.nullDevice
+        try? task.run()
+        task.waitUntilExit()
     }
 }
 

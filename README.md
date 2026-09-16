@@ -217,8 +217,9 @@ see a live view of today's checklist:
 - **Pause Reminders** / **Resume Reminders** — stops the checker from nagging
   you (checklist items and meeting reminders both) until you resume, without
   unloading the background agent. Equivalent to `badger pause` / `badger resume`.
-- **Quit Badger** — quits the menu bar icon itself. The checker keeps running
-  in the background either way; use `launchctl bootout` (below) to stop that too.
+- **Quit Badger** — stops the background checker (`com.badger.checker`) and
+  then quits the menu bar icon itself, so no more nagging until you run
+  `setup.sh` again or manually `launchctl bootstrap` the checker back (below).
 
 The icon is a macOS "template image" (outline + stripes only, no fill), so it
 automatically renders in black or white to match your current menu bar
