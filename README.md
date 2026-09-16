@@ -1,16 +1,21 @@
 # Local Nagger
 
 A local macOS app that nags you with a full-screen, blurred overlay until you
-mark a recurring daily task done — built because notification banners are too
-easy to ignore.
+mark a recurring daily task done, and can also warn you 2 minutes before a
+Google Calendar meeting starts with a one-click join button — built because
+notification banners are too easy to ignore.
 
 - Each checklist item has its own interval and active time window (default:
   every 15 minutes, 08:00-22:00).
 - When an item is due, a full-screen blurred overlay (like DeskMinder) covers
   every display with **Done for today** and **Skip today** buttons — it won't
   go away on its own.
+- Optionally, the same overlay fires 2 minutes before a calendar meeting
+  starts, with a **Join Meeting** button that opens the video-call link
+  directly — see [Meeting reminders](#meeting-reminders-google-calendar-via-eventkit).
 - Runs automatically at login via a `launchd` agent.
-- Every done/skipped/missed event is logged for a full daily adherence history.
+- Every done/skipped/missed/meeting event is logged for a full daily
+  adherence history.
 
 ## Setup
 
