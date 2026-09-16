@@ -113,7 +113,7 @@ badger status --json     # machine-readable, used by the menu bar icon
 
 ### `badger pause` / `badger resume`
 
-Stop (or restart) all nagging — checklist items and meeting reminders — until
+Stop (or restart) all badging — checklist items and meeting reminders — until
 resumed. The background checker keeps running and checking in, it just won't
 show any overlays while paused. Also available from the menu bar icon.
 
@@ -214,11 +214,11 @@ see a live view of today's checklist:
 - A colored dot per item (green = done, yellow = pending, gray = skipped or
   missed) with the time it was marked, refreshed every time you open the menu.
 - **Open History…** — runs `badger history` in a new Terminal tab.
-- **Pause Reminders** / **Resume Reminders** — stops the checker from nagging
+- **Pause Reminders** / **Resume Reminders** — stops the checker from badging
   you (checklist items and meeting reminders both) until you resume, without
   unloading the background agent. Equivalent to `badger pause` / `badger resume`.
 - **Quit Badger** — stops the background checker (`com.badger.checker`) and
-  then quits the menu bar icon itself, so no more nagging until you run
+  then quits the menu bar icon itself, so no more badging until you run
   `setup.sh` again or manually `launchctl bootstrap` the checker back (below).
 
 The icon is a macOS "template image" (outline + stripes only, no fill), so it
