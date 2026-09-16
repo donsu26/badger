@@ -1,4 +1,4 @@
-// Full-screen blurred reminder overlay for Local Nagger.
+// Full-screen blurred reminder overlay for Badger.
 //
 // Usage:
 //   overlay "<item name>" <giving_up_after_seconds>
@@ -84,7 +84,7 @@ final class OverlayController: NSObject {
             self?.finish(with: "timeout")
         }
 
-        if let selfTest = ProcessInfo.processInfo.environment["NAGGER_OVERLAY_SELF_TEST"] {
+        if let selfTest = ProcessInfo.processInfo.environment["BADGER_OVERLAY_SELF_TEST"] {
             scheduleSelfTest(selfTest)
         }
     }

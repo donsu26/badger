@@ -1,4 +1,4 @@
-// EventKit CLI for Local Nagger's meeting-reminder feature.
+// EventKit CLI for Badger's meeting-reminder feature.
 //
 // Usage:
 //   calendar-events check-auth

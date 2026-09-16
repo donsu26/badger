@@ -7,11 +7,11 @@ PROJECT_DIR = Path(__file__).resolve().parent.parent
 
 
 def config_path() -> Path:
-    return Path(os.environ.get("NAGGER_CONFIG", PROJECT_DIR / "config.yaml"))
+    return Path(os.environ.get("BADGER_CONFIG", PROJECT_DIR / "config.yaml"))
 
 
 def data_dir() -> Path:
-    d = Path(os.environ.get("NAGGER_DATA_DIR", PROJECT_DIR / "data"))
+    d = Path(os.environ.get("BADGER_DATA_DIR", PROJECT_DIR / "data"))
     d.mkdir(parents=True, exist_ok=True)
     return d
 

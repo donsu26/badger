@@ -1,5 +1,5 @@
 #!/bin/bash
-# Idempotent installer for Local Nagger.
+# Idempotent installer for Badger.
 set -euo pipefail
 
 DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -50,10 +50,10 @@ if [ ! -f data/calendar_state.json ]; then
 fi
 touch data/history.jsonl
 
-chmod +x bin/nagger
+chmod +x bin/badger
 
-PLIST_SRC="$DIR/launchd/com.local-nagger.checker.plist.template"
-PLIST_DST="$HOME/Library/LaunchAgents/com.local-nagger.checker.plist"
+PLIST_SRC="$DIR/launchd/com.badger.checker.plist.template"
+PLIST_DST="$HOME/Library/LaunchAgents/com.badger.checker.plist"
 mkdir -p "$HOME/Library/LaunchAgents"
 
 # Clean up the pre-rename agent/plist if present (label changed from
@@ -65,17 +65,32 @@ if [ -L "$OLD_PLIST_DST" ] || [ -f "$OLD_PLIST_DST" ]; then
     rm -f "$OLD_PLIST_DST"
 fi
 
+# Clean up the pre-rename agent/plist if present (app renamed from
+# Local Nagger to Badger, label changed from com.local-nagger.checker to
+# com.badger.checker).
+OLD_NAGGER_PLIST_DST="$HOME/Library/LaunchAgents/com.local-nagger.checker.plist"
+if [ -L "$OLD_NAGGER_PLIST_DST" ] || [ -f "$OLD_NAGGER_PLIST_DST" ]; then
+    echo "Removing legacy launchd agent (com.local-nagger.checker)..."
+    launchctl bootout "gui/$(id -u)/com.local-nagger.checker" 2>/dev/null || true
+    rm -f "$OLD_NAGGER_PLIST_DST"
+fi
+
 if [ -L "$PLIST_DST" ] || [ -f "$PLIST_DST" ]; then
     echo "Unloading existing launchd agent (if loaded)..."
-    launchctl bootout "gui/$(id -u)/com.local-nagger.checker" 2>/dev/null || true
+    launchctl bootout "gui/$(id -u)/com.badger.checker" 2>/dev/null || true
     rm -f "$PLIST_DST"
 fi
-sed "s|__NAGGER_DIR__|$DIR|g" "$PLIST_SRC" > "$PLIST_DST"
+sed "s|__BADGER_DIR__|$DIR|g" "$PLIST_SRC" > "$PLIST_DST"
 
 echo "Loading launchd agent..."
 launchctl bootstrap "gui/$(id -u)" "$PLIST_DST"
 
-SKILL_DIR="$HOME/.claude/skills/local-nagger"
+SKILL_DIR="$HOME/.claude/skills/badger"
+OLD_SKILL_DIR="$HOME/.claude/skills/local-nagger"
+if [ -d "$OLD_SKILL_DIR" ]; then
+    echo "Removing legacy Claude Code skill (local-nagger)..."
+    rm -rf "$OLD_SKILL_DIR"
+fi
 if [ ! -f "$SKILL_DIR/SKILL.md" ]; then
     echo "Installing Claude Code skill..."
     mkdir -p "$SKILL_DIR"
@@ -85,15 +100,15 @@ fi
 AUTH_JSON=$("$DIR/bin/calendar-events" check-auth 2>/dev/null || echo '{"status":"error"}')
 if echo "$AUTH_JSON" | grep -q '"status":"notDetermined"'; then
     echo ""
-    echo "Local Nagger wants to read Calendar.app to show meeting reminders."
+    echo "Badger wants to read Calendar.app to show meeting reminders."
     echo "Approve the permission prompt that appears now (System Settings > Privacy & Security > Calendars)."
     "$DIR/bin/calendar-events" request-access --timeout 60 >/dev/null || true
 fi
 
-PATH_LINE='export PATH="$HOME/local-nagger/bin:$PATH"'
+PATH_LINE='export PATH="$HOME/badger/bin:$PATH"'
 if ! grep -qF "$PATH_LINE" "$HOME/.zshrc" 2>/dev/null; then
     echo ""
-    echo "Add this line to your ~/.zshrc to use the 'nagger' CLI:"
+    echo "Add this line to your ~/.zshrc to use the 'badger' CLI:"
     echo "  $PATH_LINE"
 fi
 
@@ -105,5 +120,5 @@ echo "will ask you to re-approve Calendar access after any future rebuild."
 
 echo ""
 echo "Setup complete. Verifying..."
-launchctl list | grep com.local-nagger.checker || echo "warning: agent not showing in launchctl list yet"
-"$DIR/bin/nagger" list
+launchctl list | grep com.badger.checker || echo "warning: agent not showing in launchctl list yet"
+"$DIR/bin/badger" list

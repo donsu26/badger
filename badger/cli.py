@@ -125,7 +125,7 @@ def cmd_history(args) -> None:
 
 
 def build_parser() -> argparse.ArgumentParser:
-    parser = argparse.ArgumentParser(prog="nagger", description="Local Nagger checklist reminders")
+    parser = argparse.ArgumentParser(prog="badger", description="Badger checklist reminders")
     sub = parser.add_subparsers(dest="command", required=True)
 
     p_add = sub.add_parser("add", help="add a checklist item")

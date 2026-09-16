@@ -3,8 +3,8 @@
 <plist version="1.0">
 <dict>
 	<key>NSCalendarsUsageDescription</key>
-	<string>Local Nagger reads upcoming Calendar events to show meeting reminders.</string>
+	<string>Badger reads upcoming Calendar events to show meeting reminders.</string>
 	<key>NSCalendarsFullAccessUsageDescription</key>
-	<string>Local Nagger reads upcoming Calendar events to show meeting reminders.</string>
+	<string>Badger reads upcoming Calendar events to show meeting reminders.</string>
 </dict>
 </plist>

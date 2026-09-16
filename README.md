@@ -1,4 +1,4 @@
-# Local Nagger
+# Badger
 
 A local macOS app that nags you with a full-screen, blurred overlay until you
 mark a recurring daily task done, and can also warn you 2 minutes before a
@@ -32,20 +32,20 @@ Then add the CLI to your `PATH` (setup.sh will print this line if it's not
 already in `~/.zshrc`):
 
 ```
-export PATH="$HOME/local-nagger/bin:$PATH"
+export PATH="$HOME/badger/bin:$PATH"
 ```
 
 ## Usage
 
-### `nagger add <name> [options]`
+### `badger add <name> [options]`
 
 Add a new checklist item.
 
 ```
-nagger add "Take medicine" --interval 15 --start 08:00 --end 22:00
-nagger add "Drink water"                        # uses the defaults (every 15m, 08:00-22:00, every day)
-nagger add "Take out trash" --days sun          # only nags on Sundays
-nagger add "Gym" --days weekdays --start 06:00 --end 09:00
+badger add "Take medicine" --interval 15 --start 08:00 --end 22:00
+badger add "Drink water"                        # uses the defaults (every 15m, 08:00-22:00, every day)
+badger add "Take out trash" --days sun          # only nags on Sundays
+badger add "Gym" --days weekdays --start 06:00 --end 09:00
 ```
 
 - `--interval <minutes>` — how often to re-nag while the item is due (default: `15`)
@@ -54,48 +54,48 @@ nagger add "Gym" --days weekdays --start 06:00 --end 09:00
   (`mon,tue,wed,thu,fri,sat,sun`), or one of `weekdays`, `weekends`, `all`/`daily`/`everyday`
   (default: `all`)
 
-### `nagger update <name> [options]`
+### `badger update <name> [options]`
 
 Change an existing item's interval, window, or days. Same flags as `add`; only
 the flags you pass are changed, the rest are left as-is.
 
 ```
-nagger update "Take medicine" --interval 30
-nagger update "Gym" --days weekends --start 08:00 --end 10:00
+badger update "Take medicine" --interval 30
+badger update "Gym" --days weekends --start 08:00 --end 10:00
 ```
 
-### `nagger remove <name>`
+### `badger remove <name>`
 
 Delete an item from the checklist.
 
 ```
-nagger remove "Drink water"
+badger remove "Drink water"
 ```
 
-### `nagger list`
+### `badger list`
 
 Print every configured item with its interval, window, and active days.
 
 ```
-nagger list
+badger list
 ```
 
-### `nagger status`
+### `badger status`
 
 Show each item's status for today (`pending` / `done` / `skipped`), when that
 status was set, and whether it's currently in its active window.
 
 ```
-nagger status
+badger status
 ```
 
-### `nagger history [options]`
+### `badger history [options]`
 
 Show the done/skipped/missed event log.
 
 ```
-nagger history                                  # last 7 days, all items
-nagger history --item "Take medicine" --days 30
+badger history                                  # last 7 days, all items
+badger history --item "Take medicine" --days 30
 ```
 
 - `--item <name>` — filter to one item (default: all items)
@@ -106,7 +106,7 @@ because it may name real medications. Only `config.example.yaml` is committed.
 
 ## Meeting reminders (Google Calendar via EventKit)
 
-Local Nagger can also show the same kind of full-screen overlay 2 minutes
+Badger can also show the same kind of full-screen overlay 2 minutes
 before a Google Calendar meeting starts, with a **Join Meeting** button that
 opens the video-call link directly. It's off by default.
 
@@ -150,24 +150,24 @@ Each meeting is only notified once, regardless of whether you click Join,
 Dismiss, or let it time out — unlike checklist items, meetings aren't
 recurring nags.
 
-### `nagger calendar list [--hours N]`
+### `badger calendar list [--hours N]`
 
 Debug/inspection command: prints upcoming events (default: next 2 hours) and
 whatever join link was detected for each, without the 2-minute gating.
 
-### `nagger calendar test`
+### `badger calendar test`
 
 Force-shows the meeting overlay for the soonest upcoming event that has a
 detected join link, bypassing the 2-minute gate — useful for testing the
 overlay UI without waiting for a real meeting. It never writes to the
 dedupe state, so it won't suppress the real reminder later.
 
-Results show up via the normal `nagger history` command as `meeting_join`,
+Results show up via the normal `badger history` command as `meeting_join`,
 `meeting_dismiss`, or `meeting_timeout` events.
 
 ## Claude Code integration
 
-A global Claude Code skill (`~/.claude/skills/local-nagger/`) lets you manage
+A global Claude Code skill (`~/.claude/skills/badger/`) lets you manage
 reminders conversationally from any directory, e.g. "remind me to stretch
 every hour" or "is my reminder service running?". The skill source lives in
 `claude-skill/SKILL.md` and is installed by `setup.sh`.
@@ -193,8 +193,8 @@ correctly.
 ## Managing the background service
 
 ```
-launchctl list | grep com.local-nagger.checker        # check it's running
-launchctl kickstart -k gui/$(id -u)/com.local-nagger.checker   # force an immediate tick
-launchctl bootout gui/$(id -u)/com.local-nagger.checker        # stop it
+launchctl list | grep com.badger.checker        # check it's running
+launchctl kickstart -k gui/$(id -u)/com.badger.checker   # force an immediate tick
+launchctl bootout gui/$(id -u)/com.badger.checker        # stop it
 tail -f data/checker.log data/checker.err.log                # watch activity/errors
 ```
