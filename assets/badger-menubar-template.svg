@@ -1,0 +1,17 @@
+<!-- Reference for the menu bar glyph. The actual runtime icon is drawn
+     procedurally in overlay-src/statusbar.swift (makeStatusBarIcon) using
+     the same path data, so it never depends on loading this file. -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <circle cx="172" cy="128" r="54" fill="black"/>
+  <circle cx="340" cy="128" r="54" fill="black"/>
+  <path d="M256,120 C350,120 400,180 400,270 C400,360 340,430 256,455
+           C172,430 112,360 112,270 C112,180 162,120 256,120 Z"
+        fill="none" stroke="black" stroke-width="16"/>
+  <path d="M256,442 Q200,430 185,370 Q168,300 188,230 Q205,175 225,155
+           Q245,145 250,165 Q255,190 240,230 Q225,280 232,340 Q238,390 256,442 Z" fill="black"/>
+  <path d="M256,442 Q312,430 327,370 Q344,300 324,230 Q307,175 287,155
+           Q267,145 262,165 Q257,190 272,230 Q287,280 280,340 Q274,390 256,442 Z" fill="black"/>
+  <ellipse cx="256" cy="452" rx="24" ry="17" fill="black"/>
+  <circle cx="214" cy="290" r="10" fill="black"/>
+  <circle cx="298" cy="290" r="10" fill="black"/>
+</svg>

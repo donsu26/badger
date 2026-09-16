@@ -37,6 +37,15 @@ if [ ! -f bin/calendar-events ] || [ overlay-src/calendar-events.swift -nt bin/c
     codesign --force --sign - bin/calendar-events
 fi
 
+if [ ! -f bin/statusbar ] || [ overlay-src/statusbar.swift -nt bin/statusbar ]; then
+    if ! command -v swiftc >/dev/null 2>&1; then
+        echo "error: swiftc not found. Install Xcode Command Line Tools with: xcode-select --install" >&2
+        exit 1
+    fi
+    echo "Compiling statusbar binary..."
+    swiftc -O overlay-src/statusbar.swift -o bin/statusbar
+fi
+
 if [ ! -f config.yaml ]; then
     echo "Creating config.yaml from config.example.yaml..."
     cp config.example.yaml config.yaml
@@ -85,6 +94,18 @@ sed "s|__BADGER_DIR__|$DIR|g" "$PLIST_SRC" > "$PLIST_DST"
 echo "Loading launchd agent..."
 launchctl bootstrap "gui/$(id -u)" "$PLIST_DST"
 
+STATUSBAR_PLIST_SRC="$DIR/launchd/com.badger.statusbar.plist.template"
+STATUSBAR_PLIST_DST="$HOME/Library/LaunchAgents/com.badger.statusbar.plist"
+if [ -L "$STATUSBAR_PLIST_DST" ] || [ -f "$STATUSBAR_PLIST_DST" ]; then
+    echo "Unloading existing statusbar launchd agent (if loaded)..."
+    launchctl bootout "gui/$(id -u)/com.badger.statusbar" 2>/dev/null || true
+    rm -f "$STATUSBAR_PLIST_DST"
+fi
+sed "s|__BADGER_DIR__|$DIR|g" "$STATUSBAR_PLIST_SRC" > "$STATUSBAR_PLIST_DST"
+
+echo "Loading statusbar launchd agent..."
+launchctl bootstrap "gui/$(id -u)" "$STATUSBAR_PLIST_DST"
+
 SKILL_DIR="$HOME/.claude/skills/badger"
 OLD_SKILL_DIR="$HOME/.claude/skills/local-nagger"
 if [ -d "$OLD_SKILL_DIR" ]; then
@@ -120,5 +141,6 @@ echo "will ask you to re-approve Calendar access after any future rebuild."
 
 echo ""
 echo "Setup complete. Verifying..."
-launchctl list | grep com.badger.checker || echo "warning: agent not showing in launchctl list yet"
+launchctl list | grep com.badger.checker || echo "warning: checker agent not showing in launchctl list yet"
+launchctl list | grep com.badger.statusbar || echo "warning: statusbar agent not showing in launchctl list yet"
 "$DIR/bin/badger" list

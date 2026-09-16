@@ -77,6 +77,9 @@ def run_tick() -> None:
 
 
 def _tick() -> None:
+    if paths.paused_path().exists():
+        return
+
     now = state_mod.now()
     _check_calendar(now)  # before checklist items - meeting timing is more time-sensitive
 

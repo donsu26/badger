@@ -30,3 +30,7 @@ def lock_path() -> Path:
 
 def calendar_state_path() -> Path:
     return data_dir() / "calendar_state.json"
+
+
+def paused_path() -> Path:
+    return data_dir() / "paused"

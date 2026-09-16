@@ -1,10 +1,11 @@
 from __future__ import annotations
 
 import argparse
+import json
 import sys
 from datetime import datetime
 
-from . import calendar_events, config, history
+from . import calendar_events, config, history, paths
 from . import state as state_mod
 
 
@@ -51,6 +52,21 @@ def cmd_list(args) -> None:
         )
 
 
+def _window_note(item, now) -> str:
+    if now.date().weekday() not in item.days:
+        return "not scheduled today"
+    in_window = item.window_start <= now.time() < item.window_end
+    return "in window" if in_window else "outside window"
+
+
+def _menu_detail(status: str, status_time: str | None, window_note: str) -> str:
+    if status == "pending":
+        return "not today" if window_note == "not scheduled today" else window_note
+    if status_time:
+        return datetime.fromisoformat(status_time).strftime("%H:%M")
+    return status
+
+
 def cmd_status(args) -> None:
     try:
         items = config.load_items()
@@ -59,18 +75,42 @@ def cmd_status(args) -> None:
         sys.exit(1)
     st = state_mod.load()
     now = state_mod.now()
+
+    if args.json:
+        rows = []
+        for name, item in items.items():
+            entry = st.get(name, state_mod.default_entry())
+            status = entry.get("status", "pending")
+            status_time = entry.get("status_time")
+            window_note = _window_note(item, now)
+            rows.append(
+                {
+                    "name": name,
+                    "status": status,
+                    "status_time": status_time,
+                    "detail": _menu_detail(status, status_time, window_note),
+                }
+            )
+        print(json.dumps({"items": rows, "paused": paths.paused_path().exists()}))
+        return
+
     if not items:
         print("(no items configured)")
         return
     for name, item in items.items():
         entry = st.get(name, state_mod.default_entry())
-        if now.date().weekday() not in item.days:
-            window_note = "not scheduled today"
-        else:
-            in_window = item.window_start <= now.time() < item.window_end
-            window_note = "in window" if in_window else "outside window"
         status_time = entry.get("status_time") or "-"
-        print(f"{name}\t{entry.get('status', 'pending')}\t{status_time}\t({window_note})")
+        print(f"{name}\t{entry.get('status', 'pending')}\t{status_time}\t({_window_note(item, now)})")
+
+
+def cmd_pause(args) -> None:
+    paths.paused_path().touch()
+    print("paused")
+
+
+def cmd_resume(args) -> None:
+    paths.paused_path().unlink(missing_ok=True)
+    print("resumed")
 
 
 def cmd_calendar_list(args) -> None:
@@ -160,7 +200,14 @@ def build_parser() -> argparse.ArgumentParser:
     p_list.set_defaults(func=cmd_list)
 
     p_status = sub.add_parser("status", help="show today's status")
+    p_status.add_argument("--json", action="store_true", help="emit machine-readable JSON")
     p_status.set_defaults(func=cmd_status)
+
+    p_pause = sub.add_parser("pause", help="pause all reminders until resumed")
+    p_pause.set_defaults(func=cmd_pause)
+
+    p_resume = sub.add_parser("resume", help="resume reminders after a pause")
+    p_resume.set_defaults(func=cmd_resume)
 
     p_history = sub.add_parser("history", help="show event history")
     p_history.add_argument("--item", default=None)

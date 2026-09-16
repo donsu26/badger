@@ -1,3 +1,5 @@
+<img src="assets/badger-logo.svg" width="96" align="left" alt="Badger logo">
+
 # Badger
 
 A free, open-source alternative to [InYourFace](https://inyourface.app) built
@@ -23,12 +25,15 @@ account, no paid tiers, no GUI required to set things up.
 - Runs automatically at login via a `launchd` agent.
 - Every done/skipped/missed/meeting event is logged for a full daily
   adherence history.
+- A menu bar icon shows today's status at a glance, and lets you pause
+  reminders or open the history without touching the CLI.
 
 ## Contents
 
 - [Setup](#setup)
 - [Checklist reminders](#checklist-reminders)
 - [Meeting reminders (Google Calendar via EventKit)](#meeting-reminders-google-calendar-via-eventkit)
+- [Menu bar icon](#menu-bar-icon)
 - [Claude Code integration](#claude-code-integration)
 - [Managing the background service](#managing-the-background-service)
 - [How the overlay works](#how-the-overlay-works)
@@ -41,8 +46,8 @@ account, no paid tiers, no GUI required to set things up.
 
 This creates a virtualenv, installs dependencies, creates `config.yaml` from
 `config.example.yaml` if it doesn't exist yet, installs the Claude Code skill,
-and loads the `launchd` agent so the checker starts running immediately (and
-again automatically at every login).
+and loads two `launchd` agents — the checker and the menu bar icon — so both
+start running immediately (and again automatically at every login).
 
 Then add the CLI to your `PATH` (setup.sh will print this line if it's not
 already in `~/.zshrc`):
@@ -103,6 +108,18 @@ status was set, and whether it's currently in its active window.
 
 ```
 badger status
+badger status --json     # machine-readable, used by the menu bar icon
+```
+
+### `badger pause` / `badger resume`
+
+Stop (or restart) all nagging — checklist items and meeting reminders — until
+resumed. The background checker keeps running and checking in, it just won't
+show any overlays while paused. Also available from the menu bar icon.
+
+```
+badger pause
+badger resume
 ```
 
 ### `badger history [options]`
@@ -188,6 +205,25 @@ dedupe state, so it won't suppress the real reminder later.
 Results show up via the normal `badger history` command as `meeting_join`,
 `meeting_dismiss`, or `meeting_timeout` events.
 
+## Menu bar icon
+
+Badger runs a small persistent status item (`bin/statusbar`, loaded by its
+own `launchd` agent) that shows the badger mark in the menu bar. Click it to
+see a live view of today's checklist:
+
+- A colored dot per item (green = done, yellow = pending, gray = skipped or
+  missed) with the time it was marked, refreshed every time you open the menu.
+- **Open History…** — runs `badger history` in a new Terminal tab.
+- **Pause Reminders** / **Resume Reminders** — stops the checker from nagging
+  you (checklist items and meeting reminders both) until you resume, without
+  unloading the background agent. Equivalent to `badger pause` / `badger resume`.
+- **Quit Badger** — quits the menu bar icon itself. The checker keeps running
+  in the background either way; use `launchctl bootout` (below) to stop that too.
+
+The icon is a macOS "template image" (outline + stripes only, no fill), so it
+automatically renders in black or white to match your current menu bar
+appearance.
+
 ## Claude Code integration
 
 A global Claude Code skill (`~/.claude/skills/badger/`) lets you manage
@@ -202,6 +238,14 @@ launchctl list | grep com.badger.checker        # check it's running
 launchctl kickstart -k gui/$(id -u)/com.badger.checker   # force an immediate tick
 launchctl bootout gui/$(id -u)/com.badger.checker        # stop it
 tail -f data/checker.log data/checker.err.log                # watch activity/errors
+```
+
+The menu bar icon is a second, independent agent:
+
+```
+launchctl list | grep com.badger.statusbar       # check it's running
+launchctl bootout gui/$(id -u)/com.badger.statusbar  # stop it (or click Quit Badger)
+tail -f data/statusbar.log data/statusbar.err.log    # watch activity/errors
 ```
 
 ## How the overlay works

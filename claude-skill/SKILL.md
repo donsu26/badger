@@ -16,6 +16,7 @@ shell: `~/badger/bin/badger`.
 - List configured items: `~/badger/bin/badger list`
 - Today's status per item: `~/badger/bin/badger status`
 - History / adherence: `~/badger/bin/badger history [--item "<Name>"] [--days N]`
+- Pause/resume all nagging (checklist + meetings): `~/badger/bin/badger pause` / `~/badger/bin/badger resume`
 
 Item names must match exactly (case-sensitive) what's shown by `list`/`status` — look it up first if unsure rather than guessing.
 
@@ -37,5 +38,7 @@ The reminder checker runs as a launchd agent labeled `com.badger.checker`, ticki
 - Stop it: `launchctl bootout gui/$(id -u)/com.badger.checker`
 - Start it again: `launchctl bootstrap gui/$(id -u) ~/Library/LaunchAgents/com.badger.checker.plist`
 - Recent activity / errors: `tail -n 50 ~/badger/data/checker.log` and `~/badger/data/checker.err.log`
+
+The menu bar icon runs as a separate launchd agent labeled `com.badger.statusbar` (persistent, not a periodic tick). Same commands as above, substituting that label and `~/badger/data/statusbar.log`/`.err.log`.
 
 Never edit `~/badger/config.yaml` or `data/state.json`/`data/history.jsonl` directly — always go through the CLI so validation and locking are respected.
