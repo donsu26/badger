@@ -5,6 +5,8 @@ mark a recurring daily task done, and can also warn you 2 minutes before a
 Google Calendar meeting starts with a one-click join button — built because
 notification banners are too easy to ignore.
 
+![Overlay example](assets/overlay-screenshot.png)
+
 - Each checklist item has its own interval and active time window (default:
   every 15 minutes, 08:00-22:00).
 - When an item is due, a full-screen blurred overlay (like DeskMinder) covers
@@ -16,6 +18,15 @@ notification banners are too easy to ignore.
 - Runs automatically at login via a `launchd` agent.
 - Every done/skipped/missed/meeting event is logged for a full daily
   adherence history.
+
+## Contents
+
+- [Setup](#setup)
+- [Checklist reminders](#checklist-reminders)
+- [Meeting reminders (Google Calendar via EventKit)](#meeting-reminders-google-calendar-via-eventkit)
+- [Claude Code integration](#claude-code-integration)
+- [Managing the background service](#managing-the-background-service)
+- [How the overlay works](#how-the-overlay-works)
 
 ## Setup
 
@@ -35,7 +46,7 @@ already in `~/.zshrc`):
 export PATH="$HOME/badger/bin:$PATH"
 ```
 
-## Usage
+## Checklist reminders
 
 ### `badger add <name> [options]`
 
@@ -179,11 +190,16 @@ reminders conversationally from any directory, e.g. "remind me to stretch
 every hour" or "is my reminder service running?". The skill source lives in
 `claude-skill/SKILL.md` and is installed by `setup.sh`.
 
+## Managing the background service
+
+```
+launchctl list | grep com.badger.checker        # check it's running
+launchctl kickstart -k gui/$(id -u)/com.badger.checker   # force an immediate tick
+launchctl bootout gui/$(id -u)/com.badger.checker        # stop it
+tail -f data/checker.log data/checker.err.log                # watch activity/errors
+```
+
 ## How the overlay works
-
-When an item is due, this is what greets you on every display:
-
-![Overlay example](assets/overlay-screenshot.png)
 
 The reminder popup (`overlay-src/overlay.swift`) is a small compiled Swift
 binary (built by `setup.sh` into `bin/overlay`) that shows a borderless,
@@ -196,12 +212,3 @@ never actually became the key/active app, so real mouse clicks on the
 buttons were silently swallowed as mere focus-steal attempts. A compiled
 process running a real `NSApp.run()` event loop becomes key/main/active
 correctly.
-
-## Managing the background service
-
-```
-launchctl list | grep com.badger.checker        # check it's running
-launchctl kickstart -k gui/$(id -u)/com.badger.checker   # force an immediate tick
-launchctl bootout gui/$(id -u)/com.badger.checker        # stop it
-tail -f data/checker.log data/checker.err.log                # watch activity/errors
-```
